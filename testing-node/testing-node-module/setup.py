@@ -35,7 +35,7 @@ class GS_Unit_Test:
         # Read dev into class
         self.GS_USB = dev
 
-        return self
+        return
     
     def timestamp(self):
         return time.time - self.start_time
@@ -70,7 +70,7 @@ class GS_Unit_Test:
         print('frame was not read!')
         return
     
-    def read_mode(self, time_set = 60_000):
+    def read_mode(self, time_set = 60):
         '''
         Defines a function that puts 
         
@@ -80,6 +80,8 @@ class GS_Unit_Test:
             frame = GsUsbFrame()
             if self.GS_USB.read(frame, 0):
                 self.rx.append((frame, self.timestamp()))
+
+        return
 
     def export_data(self, path, name, TX_RX = "BOTH"):
         #TODO
