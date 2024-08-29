@@ -41,7 +41,7 @@ class GS_Unit_Test:
         return time.time - self.start_time
     
     def send_message_manual(self, can_id, data):
-        frame_str = f'can_id, data'
+        frame_str = f'{can_id}, {data}'
 
         # intitialize frame
         frame = GsUsbFrame(can_id, data)
@@ -93,6 +93,18 @@ class GS_Unit_Test:
         name: filename
         TX_RX: export tx or rx or both
         '''
+
+        match TX_RX:
+            case "BOTH":
+                counter_tx = 0
+                counter_rx = 0
+                while counter_tx < len(self.tx) or counter_rx < len(self.rx):
+                    
+
+            case "TX":
+
+            case "RX":
+
         return
 
     def send_from_csv(self, path):
