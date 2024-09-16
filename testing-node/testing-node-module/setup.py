@@ -6,6 +6,9 @@ from gs_usb.constants import (
     CAN_RTR_FLAG,
 )
 import time
+from datetime import datetime
+
+
 
 class GS_Unit_Test:
     rx = []
@@ -13,20 +16,18 @@ class GS_Unit_Test:
 
     def __init__(self, **kwargs):
         # set params
-        bitrate = kwargs.pop('bitrate', 500000)
+        bitrate = kwargs.pop('bitrate', 500_000)
         dev = kwargs.pop('dev', 0)
 
         # find device
         devs = GsUsb.scan()
         if len(devs) == 0:
-            print("Can not find gs_usb device")
-            return
+            raise Exception("Can not find gs_usb device")
         dev = devs[dev]
 
         # Configuration
         if not dev.set_bitrate(bitrate):
-            print("Can not set bitrate for gs_usb")
-            return
+            raise Exception("Can not set bitrate for gs_usb")
 
         # Start device
         dev.start()
@@ -34,8 +35,6 @@ class GS_Unit_Test:
 
         # Read dev into class
         self.GS_USB = dev
-
-        return
     
     def timestamp(self):
         return time.time - self.start_time
@@ -55,7 +54,7 @@ class GS_Unit_Test:
         
     def read_message_manual(self, timeout = 1):
         '''
-        Defines a Function that 
+        Defines a Function that listens for a message for time timout, if message was found
         
         
         '''
@@ -68,22 +67,20 @@ class GS_Unit_Test:
         
         # exception: frame not read
         print('frame was not read!')
-        return
+
     
-    def read_mode(self, time_set = 60):
+    def read_mode(self, time_set = 60, timout = 0.05):
         '''
-        Defines a function that puts 
+        Defines a function that reads for a set amoiunt of time
         
         ''' 
         time_set = time.time() + time_set
         while (time_set > time.time()):
             frame = GsUsbFrame()
-            if self.GS_USB.read(frame, 0):
+            if self.GS_USB.read(frame):
                 self.rx.append((frame, self.timestamp()))
 
-        return
-
-    def export_data(self, path, name, TX_RX = "BOTH"):
+    def export_data(self, path, name = datetime.now(), TX_RX = "BOTH"):
         #TODO
         '''
         Exports data as a CSV from self.tx and self.rx. tx and rx are arrays of touples (canframe, timestamp)
@@ -93,23 +90,40 @@ class GS_Unit_Test:
         name: filename
         TX_RX: export tx or rx or both
         '''
+        export_buffer = []
 
         match TX_RX:
             case "BOTH":
                 counter_tx = 0
                 counter_rx = 0
-                while counter_tx < len(self.tx) or counter_rx < len(self.rx):
-                    
+
+                while counter_tx < len(self.tx) and counter_rx < len(self.rx):
+                    if self.tx[counter_tx][1] > self.rx[counter_rx][1]:
+                        export_buffer.append(self.tx[counter_tx])
+                        counter_tx += 1
+                    else:
+                        export_buffer.append(self.rx[counter_rx])
+                        counter_rx += 1
+
+                while counter_rx < len(self.rx):
+                    export_buffer.append(self.rx[counter_rx])
+                    counter_rx += 1
+
+                while counter_tx < len(self.tx):
+                    export_buffer.append(self.tx[counter_tx])
+                    counter_tx += 1
 
             case "TX":
+               export_buffer = self.tx 
 
             case "RX":
-
-        return
+                export_buffer = self.rx
+            
 
     def send_from_csv(self, path):
         #TODO
         '''
+        I don't think we need this
         Sends can frames from a csv file (csv will be formatted as CAN_ID, CAN_DATA...)
 
         path: filepath
