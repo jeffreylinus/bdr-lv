@@ -11,8 +11,8 @@ from datetime import datetime
 
 
 class GS_Unit_Test:
-    rx = []
     tx = []
+    rx = []
 
     def __init__(self, **kwargs):
         # set params
@@ -52,7 +52,7 @@ class GS_Unit_Test:
         return frame_str, self.timestamp
 
         
-    def read_message_manual(self, timeout = 1):
+    def read_message_manual(self, timeout = 1000):
         '''
         Defines a Function that listens for a message for time timout, if message was found
         
@@ -67,6 +67,7 @@ class GS_Unit_Test:
         
         # exception: frame not read
         print('frame was not read!')
+        return False
 
     
     def read_mode(self, time_set = 60, timout = 0.05):
