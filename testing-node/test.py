@@ -106,12 +106,14 @@ def main():
     while True:
         iframe = GsUsbFrame()
         if dev.read(iframe, 1):
-            
             print("RX  {}".format(iframe))
+        print(CAN_EFF_FLAG, CAN_ERR_FLAG, CAN_RTR_FLAG)
+        '''    
         if time.time() - end_time >= 0:
             end_time = time.time() + 1
             n += 1
             n %= len(frames)
+        '''    
         '''
             if dev.send(frames[n]):
                 print("TX  {}".format(frames[n]))
