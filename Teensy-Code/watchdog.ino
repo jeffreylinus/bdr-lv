@@ -1,7 +1,6 @@
 #include <FlexCAN_T4.h>
-#include "TM1638.h"
-FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can0;
 
+FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can0;
 // Modifed Hezheng Code for Watchdog Node
 
 
@@ -10,9 +9,11 @@ FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can0;
 // use the modified TM1638 library for Teensy 4.1 in this file
 
 
-#define TIMEOUT 1000
+#define TIMEOUT 500
 #define ITERATION_TIME 100
-#define NODE_COUNT 1 // todo: fill in the amt of nodes you have
+#define NODE_COUNT 2 // todo: fill in the amt of nodes you have
+
+#define RELAY_PIN 5
 
 void setup(void) {
   Serial.begin(115200); delay(400);
@@ -25,25 +26,42 @@ void setup(void) {
   Can0.mailboxStatus();
 
   // todo: find some way to set ready to drive
-  bool readyToDrive;
+  bool readyToDrive = true;
   while (!readyToDrive) { }
+
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, HIGH);
 }
 
 enum NODE {
     // todo: populate this with the nodes you want
     pedalBox = 0x011F,
+    IMD = 0x665281F,
 };
 
+// global to keep track of what timed out
+NODE timed_out_node;
+
 // todo: fill out with nodes
-uint8_t pedalBoxTimer = 0;
+uint16_t pedalBoxTimer = 0;
+uint16_t IMD_Timer = 0;
 
 // todo: fill out this array
-uint8_t *timerArray[] = {&pedalBoxTimer}
+uint16_t *timerArray[] = {&pedalBoxTimer, &IMD_Timer}; // array to keep track of timers
+NODE nodeArray[] = {pedalBox, IMD}; // Array to keep track of each node
+
+
+void exit(){
+    while (1){
+        // TODO: define a way to recover or just let it hang till reset
+        Serial.println(timed_out_node);
+    }
+
+}
 
 void shut_off_car() {
-    // todo: fill in code to shut off the car
-    exit(1);
-
+    digitalWrite(RELAY_PIN, LOW);
+    exit();
 }
 
 void resetTimer(const CAN_message_t &msg) {
@@ -52,6 +70,9 @@ void resetTimer(const CAN_message_t &msg) {
     switch (id) {
         case (pedalBox):
             *pedalBoxTimer = 0;
+            break;
+        case (IMD):
+            *IMD_Timer = 0;
             break;
         default:
             shut_off_car();
@@ -68,6 +89,7 @@ void loop() {
         (*timerArray[i])++;
 
         if ((*timerArray[i]) > TIMEOUT)
+            timed_out_node = nodeArray[i]; // set timedout flag to proper id
             shut_off_car();
     }
 
