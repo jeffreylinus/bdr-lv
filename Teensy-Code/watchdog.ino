@@ -9,8 +9,8 @@ FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can0;
 // use the modified TM1638 library for Teensy 4.1 in this file
 
 
-#define TIMEOUT 500
-#define ITERATION_TIME 100
+#define TIMEOUT 10 // timeout at 500ms 
+#define ITERATION_TIME 50 // check for timeout every 50ms
 #define NODE_COUNT 2 // todo: fill in the amt of nodes you have
 
 #define RELAY_PIN 5
@@ -51,17 +51,10 @@ uint16_t *timerArray[] = {&pedalBoxTimer, &IMD_Timer}; // array to keep track of
 NODE nodeArray[] = {pedalBox, IMD}; // Array to keep track of each node
 
 
-void exit(){
-    while (1){
-        // TODO: define a way to recover or just let it hang till reset
-        Serial.println(timed_out_node);
-    }
-
-}
-
 void shut_off_car() {
     digitalWrite(RELAY_PIN, LOW);
-    exit();
+    // TODO: define a way to recover or just let it hang till reset
+    while (1) Serial.println(timed_out_node);
 }
 
 void resetTimer(const CAN_message_t &msg) {

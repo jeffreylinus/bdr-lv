@@ -14,7 +14,7 @@ FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can0;
 #define CURRENT_MAX 3247
 #define ANALOG_READ_MAX 4095
 
-#define ITERATION_TIME 10
+#define ITERATION_TIME 10 // send msg every 10 ms
 
 const int potPin = 14;
 
