@@ -93,9 +93,5 @@ void loop() {
             shut_off_car();
     }
 
-
-    long long end_time = millis();
-    while (end_time - start_time < ITERATION_TIME)  // stall until iteratin time is hit
-        end_time = millis();
-
+    while (millis() - start_time < ITERATION_TIME);  // stall until iteratin time is hit
 }

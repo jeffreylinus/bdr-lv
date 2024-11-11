@@ -14,9 +14,11 @@ FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can0;
 #define CURRENT_MAX 3247
 #define ANALOG_READ_MAX 4095
 
+#define ITERATION_TIME 10
+
 const int potPin = 14;
 
-void turn_on_car();
+void drive_enable();
 
 void setup(void) {
   Serial.begin(115200); delay(400);
@@ -38,25 +40,28 @@ void drive_enable(){
     Can0.write(msg);
 }
 
-int curr_val[SET_CURRENT_LEN];
+uint8_t curr_val[SET_CURRENT_LEN];
 
 void mapResistanceToVal() {
-    int mapped_value = map(analogRead(potPin), 0, ANALOG_READ_MAX, 0, CURRENT_MAX);
-    uint8_t curr_val[0] = (mappedValue >> 8) & 0xFF; // Extract the high byte
-    uint8_t curr_val[1] = mappedValue & 0xFF; // extract the low byte
+    int mappedValue = map(analogRead(potPin), 0, ANALOG_READ_MAX, 0, CURRENT_MAX);
+    curr_val[0] = (mappedValue >> 8) & 0xFF; // Extract the high byte
+    curr_val[1] = mappedValue & 0xFF; // extract the low byte
 }
 
 
 
 void loop() {
+    long long start_time = millis();
+
     CAN_message_t msg;
     msg.id = SET_CURRENT_ID;
+    msg.len = SET_CURRENT_LEN;
 
-    // todo: figure this out
-
-    mapResistanceToVal();
-    msg.len = SET_CURRENT_LEN; 
+    mapResistanceToVal(); 
 
     for (uint8_t i = 0; i < msg.len; i++ ) msg.buf[i] = curr_val[i];
     Can0.write(msg);
+
+    while (millis() - start_time < ITERATION_TIME);  // stall until iteratin time is hit
+
 }
