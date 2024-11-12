@@ -21,6 +21,7 @@ void setup(void) {
   Can0.setBaudRate(500000);
   Can0.setMaxMB(16);
   Can0.enableFIFO();
+
   Can0.enableFIFOInterrupt();
   Can0.onReceive(resetTimer);
   Can0.mailboxStatus();
@@ -54,21 +55,20 @@ NODE nodeArray[] = {pedalBox, IMD}; // Array to keep track of each node
 void shut_off_car() {
     digitalWrite(RELAY_PIN, LOW);
     // TODO: define a way to recover or just let it hang till reset
-    while (1) Serial.println(timed_out_node);
+    while (1); Serial.println("timed_out_node");
 }
 
 void resetTimer(const CAN_message_t &msg) {
-    enum NODE id = msg.id
+    Serial.println(msg.id);
 
-    switch (id) {
+    switch (msg.id) {
         case (pedalBox):
-            *pedalBoxTimer = 0;
+            pedalBoxTimer = 0;
             break;
         case (IMD):
-            *IMD_Timer = 0;
+            IMD_Timer = 0;
             break;
         default:
-            shut_off_car();
             break;
     }
 }
