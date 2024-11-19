@@ -21,16 +21,21 @@ void setup(void) {
   Can0.setBaudRate(500000);
   Can0.setMaxMB(16);
   Can0.enableFIFO();
+
   Can0.enableFIFOInterrupt();
   Can0.onReceive(resetTimer);
   Can0.mailboxStatus();
+
+  // Set mailbox filters to accept extended IDs
+  //Can0.setMBFilter(REJECT_ALL); // Reject all IDs by default
+  //Can0.setMBFilter(FIFO, EXT);  // Accept all extended IDs in FIFO
+
 
   // todo: find some way to set ready to drive
   bool readyToDrive = true;
   while (!readyToDrive) { }
 
   pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, HIGH);
 }
 
 enum NODE {
@@ -58,7 +63,7 @@ void shut_off_car() {
 }
 
 void resetTimer(const CAN_message_t &msg) {
-    enum NODE id = msg.id;
+    enum NODE id = msg.id
 
     switch (id) {
         case (pedalBox):
