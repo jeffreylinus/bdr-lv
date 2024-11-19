@@ -9,7 +9,7 @@ FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can0;
 // use the modified TM1638 library for Teensy 4.1 in this file
 
 
-#define TIMEOUT 10 // timeout at 500ms (50 * 10)
+#define TIMEOUT 1000 // timeout at 500ms (50 * 10)
 #define ITERATION_TIME 50 // check for timeout every 50ms
 #define NODE_COUNT 2 // todo: fill in the amt of nodes you have
 
@@ -58,19 +58,20 @@ void shut_off_car() {
 }
 
 void resetTimer(const CAN_message_t &msg) {
-    enum NODE id = msg.id
+    enum NODE id = msg.id;
 
     switch (id) {
         case (pedalBox):
-            *pedalBoxTimer = 0;
+            pedalBoxTimer = 0;
             break;
         case (IMD):
-            *IMD_Timer = 0;
+            IMD_Timer = 0;
             break;
         default:
-            shut_off_car();
             break;
     }
+
+    Serial.println(id);
 }
 
 void loop() {
@@ -81,10 +82,12 @@ void loop() {
     for (uint8_t i = 0; i < NODE_COUNT ; i++) {
         (*timerArray[i])++;
 
-        if ((*timerArray[i]) > TIMEOUT)
+        if ((*timerArray[i]) > TIMEOUT) {
             timed_out_node = nodeArray[i]; // set timedout flag to proper id
             shut_off_car();
+        }
+            
     }
 
-    while (millis() - start_time < ITERATION_TIME);  // stall until iteratin time is hit
+    while (millis() - start_time < ITERATION_TIME) {}  // stall until iteratin time is hit
 }
