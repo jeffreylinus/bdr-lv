@@ -9,7 +9,7 @@ FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can0;
 // use the modified TM1638 library for Teensy 4.1 in this file
 
 
-#define TIMEOUT 1000 // timeout at 500ms (50 * 10)
+#define TIMEOUT 50 // timeout at 500ms (50 * 10)
 #define ITERATION_TIME 50 // check for timeout every 50ms
 #define NODE_COUNT 2 // todo: fill in the amt of nodes you have
 
@@ -63,7 +63,7 @@ void shut_off_car() {
 }
 
 void resetTimer(const CAN_message_t &msg) {
-    enum NODE id = msg.id
+    enum NODE id = msg.id;
 
     switch (id) {
         case (pedalBox):
