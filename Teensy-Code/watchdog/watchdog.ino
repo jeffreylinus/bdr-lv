@@ -1,6 +1,6 @@
 #include <FlexCAN_T4.h>
 
-FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can0;
+FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> Can0;
 // Modifed Hezheng Code for Watchdog Node
 
 
@@ -9,14 +9,18 @@ FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can0;
 // use the modified TM1638 library for Teensy 4.1 in this file
 
 
-#define TIMEOUT 50 // timeout at 500ms (50 * 10)
+#define TIMEOUT 500 // timeout at 500ms (50 * 10)
 #define ITERATION_TIME 50 // check for timeout every 50ms
 #define NODE_COUNT 2 // todo: fill in the amt of nodes you have
 
-#define RELAY_PIN 5
+#define RELAY_PIN 3
 
 void setup(void) {
   Serial.begin(115200); delay(400);
+  //Can0.setTX(1); // Set CAN3 TX to pin 0
+  //Can0.setRX(0); // Set CAN3 RX to pin 1
+
+
   Can0.begin();
   Can0.setBaudRate(500000);
   Can0.setMaxMB(16);
@@ -59,8 +63,11 @@ NODE nodeArray[] = {pedalBox, IMD}; // Array to keep track of each node
 void shut_off_car() {
     digitalWrite(RELAY_PIN, LOW);
     // TODO: define a way to recover or just let it hang till reset
-    while (1) Serial.println(timed_out_node);
-}
+    while (1) {
+      Serial.println(timed_out_node);
+      delay(100);
+    }
+  }
 
 void resetTimer(const CAN_message_t &msg) {
     enum NODE id = msg.id;
@@ -70,18 +77,20 @@ void resetTimer(const CAN_message_t &msg) {
             pedalBoxTimer = 0;
             break;
         case (IMD):
+            uint16_t resistance = msg.buf[0];
+            resistance <<= 8;
+            resistance &= msg.buf[1];
             IMD_Timer = 0;
             break;
         default:
             break;
     }
 
-    Serial.println(id);
 }
 
 void loop() {
     Can0.events();
-     
+    digitalWrite(RELAY_PIN, HIGH);
     long long start_time = millis();
 
     for (uint8_t i = 0; i < NODE_COUNT ; i++) {
