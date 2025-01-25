@@ -1,6 +1,6 @@
 #include <FlexCAN_T4.h>
 
-FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can0;
+FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> Can0;
 
 // Modifed Hezheng Code for PedalBox Node
 
@@ -44,6 +44,7 @@ uint8_t curr_val[SET_CURRENT_LEN];
 
 void mapResistanceToVal() {
     int mappedValue = map(analogRead(potPin), 0, ANALOG_READ_MAX, 0, CURRENT_MAX);
+    Serial.println(mappedValue);
     curr_val[0] = (mappedValue >> 8) & 0xFF; // Extract the high byte
     curr_val[1] = mappedValue & 0xFF; // extract the low byte
 }
@@ -62,6 +63,6 @@ void loop() {
     for (uint8_t i = 0; i < msg.len; i++ ) msg.buf[i] = curr_val[i];
     Can0.write(msg);
 
-    while (millis() - start_time < ITERATION_TIME);  // stall until iteratin time is hit
+    while (millis() - start_time < ITERATION_TIME) {}  // stall until iteratin time is hit
 
 }
