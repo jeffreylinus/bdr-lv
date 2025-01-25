@@ -45,7 +45,7 @@ void setup(void) {
 enum NODE {
     // todo: populate this with the nodes you want
     pedalBox = 0x011F,
-    IMD = 0x665281F,
+    IMD = 0x18FF01F4,
 };
 
 // global to keep track of what timed out
@@ -64,22 +64,26 @@ void shut_off_car() {
     digitalWrite(RELAY_PIN, LOW);
     // TODO: define a way to recover or just let it hang till reset
     while (1) {
-      Serial.println(timed_out_node);
+      Serial.println(timed_out_node, HEX);
       delay(100);
     }
   }
 
 void resetTimer(const CAN_message_t &msg) {
     enum NODE id = msg.id;
+    uint16_t resistance = 0;
 
     switch (id) {
         case (pedalBox):
             pedalBoxTimer = 0;
             break;
         case (IMD):
-            uint16_t resistance = msg.buf[0];
+            resistance = msg.buf[0];
             resistance <<= 8;
-            resistance &= msg.buf[1];
+            resistance |= msg.buf[1];
+            if (resistance < 200){
+              shut_off_car();
+            }
             IMD_Timer = 0;
             break;
         default:

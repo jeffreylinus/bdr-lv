@@ -49,17 +49,9 @@ def main():
     # Read all the time and send message in each second
     end_time, n = time.time() + 1, -1
     while True:
-        iframe = GsUsbFrame()
+        iframe = GsUsbFrame(can_id = CAN_EFF_FLAG)
         if dev.read(iframe, 1):
             print("RX  {}".format(iframe))
-            
-        if time.time() - end_time >= 0:
-            end_time = time.time() + 1
-            n += 1
-            n %= len(frames)
-
-            if dev.send(frames[n]):
-                print("TX  {}".format(frames[n]))
 
 
 if __name__ == "__main__":

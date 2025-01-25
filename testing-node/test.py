@@ -103,9 +103,9 @@ def main():
 
     # Read all the time and send message in each second
     end_time, n = time.time() + 1, -1
-    IMD = GsUsbFrame(can_id=0x665281F | CAN_EFF_FLAG, data=data)
+    #IMD = GsUsbFrame(can_id=0x665281F | CAN_EFF_FLAG, data=data)
     pedalBox = GsUsbFrame(can_id=0x011F, data=data)
-    watchdogFrames = [IMD, pedalBox]
+    watchdogFrames = [pedalBox]
     while True:
         iframe = GsUsbFrame()
         if dev.read(iframe, 1):
@@ -116,6 +116,5 @@ def main():
             for frame in watchdogFrames:
                 if dev.send(frame):
                     print("TX  {}".format(frame))
-
 
 main()
