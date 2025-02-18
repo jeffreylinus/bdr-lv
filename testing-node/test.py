@@ -107,10 +107,11 @@ def main():
     pedalBox = GsUsbFrame(can_id=0x011F, data=data)
     watchdogFrames = [pedalBox]
     while True:
+        '''
         iframe = GsUsbFrame()
         if dev.read(iframe, 1):
             print("RX  {}".format(iframe))
-         
+         '''
         if time.time() - end_time >= 0:
             end_time = time.time() + 0.25
             for frame in watchdogFrames:
