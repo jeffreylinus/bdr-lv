@@ -14,7 +14,7 @@ FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> Can0;
 #define CURRENT_MAX 3247
 #define ANALOG_READ_MAX 4095
 
-#define ITERATION_TIME 10 // send msg every 10 ms
+#define ITERATION_TIME 250 // send msg every 10 ms
 
 const int potPin = 14;
 
@@ -29,6 +29,7 @@ void setup(void) {
   Can0.enableFIFOInterrupt();
   Can0.mailboxStatus();
   analogReadResolution(12); // set analog read to 12 bits of precision
+  pinMode(potPin, INPUT);
   drive_enable();
 }
 
@@ -43,6 +44,7 @@ void drive_enable(){
 uint8_t curr_val[SET_CURRENT_LEN];
 
 void mapResistanceToVal() {
+    Serial.println(analogRead(potPin));
     int mappedValue = map(analogRead(potPin), 0, ANALOG_READ_MAX, 0, CURRENT_MAX);
     Serial.println(mappedValue);
     curr_val[0] = (mappedValue >> 8) & 0xFF; // Extract the high byte
@@ -63,6 +65,7 @@ void loop() {
     for (uint8_t i = 0; i < msg.len; i++ ) msg.buf[i] = curr_val[i];
     Can0.write(msg);
 
-    while (millis() - start_time < ITERATION_TIME) {}  // stall until iteratin time is hit
+    long long end_time = millis();
+    delay(ITERATION_TIME - (end_time - start_time));  // stall until iteratin time is hit
 
 }

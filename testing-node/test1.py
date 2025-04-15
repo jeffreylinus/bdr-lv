@@ -18,7 +18,7 @@ def main():
     dev = devs[0]
 
     # Configuration
-    if not dev.set_bitrate(250000):
+    if not dev.set_bitrate(500000):
         print("Can not set bitrate for gs_usb")
         return
 
@@ -49,7 +49,7 @@ def main():
     # Read all the time and send message in each second
     end_time, n = time.time() + 1, -1
     while True:
-        iframe = GsUsbFrame(can_id = CAN_EFF_FLAG)
+        iframe = GsUsbFrame()
         if dev.read(iframe, 1):
             print("RX  {}".format(iframe))
 
