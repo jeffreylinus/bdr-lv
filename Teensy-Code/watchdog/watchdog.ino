@@ -8,12 +8,16 @@ FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> Can0;
 // upload to both device, do not change wiring
 // use the modified TM1638 library for Teensy 4.1 in this file
 
-
-#define TIMEOUT 500 // timeout at 500ms (50 * 10)
 #define ITERATION_TIME 50 // check for timeout every 50ms
+#define TIMEOUT (1000 / ITERATION_TIME) // timeout at 1000ms (50 * 20)
 #define NODE_COUNT 2 // todo: fill in the amt of nodes you have
 
-#define RELAY_PIN 3
+#define WATCHDOG_PIN 23
+#define IMD_PIN 19
+
+bool ready = false;
+
+// #define MAKE_TIMER(nodeID) { .id = nodeID, .timer = 0 }
 
 void setup(void) {
   Serial.begin(115200); delay(400);
@@ -30,38 +34,56 @@ void setup(void) {
   Can0.onReceive(resetTimer);
   Can0.mailboxStatus();
 
-  // Set mailbox filters to accept extended IDs
-  //Can0.setMBFilter(REJECT_ALL); // Reject all IDs by default
-  //Can0.setMBFilter(FIFO, EXT);  // Accept all extended IDs in FIFO
+  pinMode(WATCHDOG_PIN, OUTPUT);
+  pinMode(IMD_PIN, OUTPUT);
+
+  digitalWrite(WATCHDOG_PIN, LOW);
+  digitalWrite(IMD_PIN, LOW);
 
 
-  // todo: find some way to set ready to drive
-  bool readyToDrive = true;
-  while (!readyToDrive) { }
 
-  pinMode(RELAY_PIN, OUTPUT);
+
+  while (!ready) Can0.events();
 }
 
 enum NODE {
     // todo: populate this with the nodes you want
     pedalBox = 0x011F,
     IMD = 0x18FF01F4,
+    readyToDrive = 0x07FE
 };
+
+///* refactor if there's time*/
+//typedef struct {
+//    enum NODE id;
+//    uint16_t watchdog;
+//
+//} nodeTimer;
+//
+//nodeTimer timers[] = {
+//    MAKE_TIMER(pedalBox),
+//    MAKE_TIMER(IMD)
+//}
+//
+//
+//
+///* end refactor*/
+
 
 // global to keep track of what timed out
 NODE timed_out_node;
 
 // todo: fill out with nodes
-uint16_t pedalBoxTimer = 0;
-uint16_t IMD_Timer = 0;
+volatile uint16_t pedalBoxTimer = 0;
+volatile uint16_t IMD_Timer = 0;
 
 // todo: fill out this array
-uint16_t *timerArray[] = {&pedalBoxTimer, &IMD_Timer}; // array to keep track of timers
+volatile uint16_t *timerArray[] = {&pedalBoxTimer, &IMD_Timer}; // array to keep track of timers
 NODE nodeArray[] = {pedalBox, IMD}; // Array to keep track of each node
 
 
-void shut_off_car() {
-    digitalWrite(RELAY_PIN, LOW);
+void shut_off_car(int pin) {
+    digitalWrite(pin, LOW);
     // TODO: define a way to recover or just let it hang till reset
     while (1) {
       Serial.println(timed_out_node, HEX);
@@ -70,7 +92,8 @@ void shut_off_car() {
   }
 
 void resetTimer(const CAN_message_t &msg) {
-    enum NODE id = msg.id;
+    NODE id = static_cast<NODE>(msg.id);
+
     uint16_t resistance = 0;
 
     switch (id) {
@@ -82,10 +105,13 @@ void resetTimer(const CAN_message_t &msg) {
             resistance <<= 8;
             resistance |= msg.buf[1];
             if (resistance < 200){
-              shut_off_car();
+              shut_off_car(IMD_PIN);
             }
             IMD_Timer = 0;
             break;
+        case(readyToDrive):
+          ready = true;
+          break;
         default:
             break;
     }
@@ -94,7 +120,8 @@ void resetTimer(const CAN_message_t &msg) {
 
 void loop() {
     Can0.events();
-    digitalWrite(RELAY_PIN, HIGH);
+    digitalWrite(WATCHDOG_PIN, HIGH);
+    digitalWrite(IMD_PIN, HIGH);
     long long start_time = millis();
 
     for (uint8_t i = 0; i < NODE_COUNT ; i++) {
@@ -102,10 +129,10 @@ void loop() {
 
         if ((*timerArray[i]) > TIMEOUT) {
             timed_out_node = nodeArray[i]; // set timedout flag to proper id
-            shut_off_car();
+            shut_off_car(WATCHDOG_PIN);
         }
             
     }
 
-    while (millis() - start_time < ITERATION_TIME) {}  // stall until iteratin time is hit
+    while (millis() - start_time < ITERATION_TIME) Can0.events();  // stall until iteratin time is hit
 }

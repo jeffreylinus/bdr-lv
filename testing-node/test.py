@@ -112,10 +112,9 @@ def main():
         iframe = GsUsbFrame()
         if dev.read(iframe, 1):
             print("RX  {}".format(iframe))
-        
+        '''
         if time.time() - end_time >= 0:
             end_time = time.time() + 0.1
-
             for i, frame in enumerate(watchdogFrames):
                 frame = GsUsbFrame(can_id=0x06B0, data = b"\x00\x00\x00\x64\x00\x00\x00\x00")
                 if dev.send(frame):
@@ -123,4 +122,5 @@ def main():
                 frame = GsUsbFrame(can_id=0x06B0, data = b"\x00\x00\x00\x63\x00\x00\x00\x00")
                 if dev.send(frame):
                     print("TX  {}".format(frame))
+        '''
 main()
